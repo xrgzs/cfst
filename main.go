@@ -137,11 +137,31 @@ func main() {
 
 	// 开始延迟测速 + 过滤延迟/丢包
 	pingData := task.NewPing().Run().FilterDelay().FilterLossRate()
+	pingData = deduplicateByIP(pingData)
 	// 开始下载测速
 	speedData := task.TestDownloadSpeed(pingData)
+	speedData = deduplicateByIP(speedData)
 	utils.ExportCsv(speedData) // 输出文件
 	speedData.Print()          // 打印结果
 	endPrint()                 // 根据情况选择退出方式（针对 Windows）
+}
+
+// 根据 IP 地址去重（可能存在同一 IP 多次测速的情况）
+func deduplicateByIP(data []utils.CloudflareIPData) []utils.CloudflareIPData {
+	if len(data) <= 1 {
+		return data
+	}
+	seen := make(map[string]struct{}, len(data))
+	result := make([]utils.CloudflareIPData, 0, len(data))
+	for _, item := range data {
+		ip := item.IP.String()
+		if _, exists := seen[ip]; exists {
+			continue
+		}
+		seen[ip] = struct{}{}
+		result = append(result, item)
+	}
+	return result
 }
 
 // 根据情况选择退出方式（针对 Windows）
