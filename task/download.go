@@ -74,11 +74,13 @@ func TestDownloadSpeed(ipSet utils.PingDelaySet) (speedSet utils.DownloadSpeedSe
 	}
 	bar := utils.NewBar(TestCount, bar_b, "")
 	for i := 0; i < testNum; i++ {
+		bar.Grow(0, fmt.Sprintf("正在测速(%d/%d): %s", i+1, testNum, ipSet[i].IP.String()))
 		speed, colo := downloadHandler(ipSet[i].IP)
 		ipSet[i].DownloadSpeed = speed
 		if ipSet[i].Colo == "" { // 只有当 Colo 是空的时候，才写入，否则代表之前是 httping 测速并获取过了
 			ipSet[i].Colo = colo
 		}
+		utils.Green.Printf("\n[下载测速] 已测完 IP (%d/%d): %s, 速度: %.2f MB/s\n", i+1, testNum, ipSet[i].IP.String(), speed/1024/1024)
 		// 在每个 IP 下载测速后，以 [下载速度下限] 条件过滤结果
 		if speed >= MinSpeed*1024*1024 {
 			bar.Grow(1, "")
