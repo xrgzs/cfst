@@ -99,6 +99,9 @@ func (p *Ping) tcping(ip *net.IPAddr) (bool, time.Duration) {
 		return false, 0
 	}
 	defer conn.Close()
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		_ = tcpConn.SetLinger(0)
+	}
 	duration := time.Since(startTime)
 	return true, duration
 }
